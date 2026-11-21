@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bài 7: Tạo bài trình chiếu</title>
+<style>
+  :root{
+    --primary:#1d4ed8;
+    --primary-dark:#1e3a8a;
+    --teal:#0f766e;
+    --amber:#d97706;
+    --rose:#e11d48;
+    --green:#16a34a;
+    --purple:#7e22ce;
+    --bg:#f0f6ff;
+    --card:#ffffff;
+    --text:#1e293b;
+    --muted:#64748b;
+    --border:#dbeafe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .container{max-width:1040px;margin:0 auto;padding:18px}
+
+  header.hero{
+    background:linear-gradient(125deg,#1d4ed8 0%,#0284c7 55%,#0f766e 100%);
+    color:#fff;padding:22px 26px;border-radius:18px;box-shadow:0 10px 25px rgba(29,78,216,.18);
+  }
+  header.hero .tag{display:inline-block;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.3px;margin-bottom:8px}
+  header.hero h1{margin:0 0 6px;font-size:24px;line-height:1.3}
+  header.hero p{margin:0;opacity:.94;font-size:14.5px}
+
+  .tracker-bar{
+    position:sticky;top:8px;z-index:50;
+    background:rgba(255,255,255,.97);backdrop-filter:blur(6px);
+    border:2px solid #93c5fd;border-radius:16px;padding:12px 16px;margin:14px 0;
+    box-shadow:0 8px 20px rgba(15,23,42,.1);
+  }
+  .tracker-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+  .tracker-metrics{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .metric-pill{
+    padding:5px 12px;border-radius:999px;font-size:13.5px;font-weight:800;display:inline-flex;align-items:center;gap:5px;
+  }
+  .m-pct{background:#dbeafe;color:#1e40af}
+  .m-inter{background:#fef3c7;color:#92400e}
+  .m-quiz{background:#f3e8ff;color:#6b21a8}
+  .m-total{background:#dcfce7;color:#15803d;font-size:14.5px}
+  .progress-track{width:100%;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#2563eb,#0d9488,#16a34a);transition:width .35s ease;border-radius:999px}
+  .tracker-sub{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:#475569;margin-top:6px}
+  .tracker-sub span.done-item{color:#15803d;font-weight:700}
+
+  .nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+  @media(max-width:720px){.nav-tabs{grid-template-columns:repeat(2,1fr)}}
+  .tab-btn{
+    border:2px solid #cbd5e1;background:#fff;color:#334155;padding:11px 10px;border-radius:14px;
+    font:inherit;font-weight:700;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;
+  }
+  .tab-btn span.step-num{font-size:12px;text-transform:uppercase;color:var(--primary);background:#eff6ff;padding:2px 9px;border-radius:999px}
+  .tab-btn:hover{border-color:#93c5fd;transform:translateY(-1px)}
+  .tab-btn.active{background:linear-gradient(135deg,#1d4ed8,#0284c7);color:#fff;border-color:#1d4ed8;box-shadow:0 6px 16px rgba(29,78,216,.24)}
+  .tab-btn.active span.step-num{background:rgba(255,255,255,.22);color:#fff}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 3px 10px rgba(15,23,42,.04)}
+  .card h2{margin:0 0 12px;font-size:20px;color:var(--primary-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3{margin:14px 0 8px;font-size:17px;color:#0f172a}
+
+  .guide-note{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    background:#eff6ff;border:1px solid #bfdbfe;padding:10px 14px;border-radius:12px;margin-bottom:14px;
+  }
+  .guide-text{font-size:14.5px;color:#1e3a8a;flex:1}
+  .btn{
+    border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;
+    background:var(--primary);color:#fff;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{filter:brightness(1.06)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-teal{background:var(--teal)}
+  .btn-amber{background:var(--amber)}
+  .btn-rose{background:var(--rose)}
+  .btn-green{background:var(--green)}
+  .btn-purple{background:var(--purple)}
+  .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
+  .btn-sm{padding:6px 12px;font-size:14px;border-radius:8px}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:780px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+  .sgk-fig{background:#fff;border:2px solid #cbd5e1;border-radius:14px;padding:14px 16px;box-shadow:0 3px 8px rgba(15,23,42,.04)}
+  .sgk-fig-caption{text-align:center;font-weight:700;font-size:14px;color:#1e3a8a;margin-top:10px;padding-top:8px;border-top:1px dashed #cbd5e1}
+
+  .lab-box{background:#f8fafc;border:1.5px solid #93c5fd;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  select,input[type=text]{padding:7px 10px;border:1px solid #94a3b8;border-radius:8px;font:inherit;background:#fff;color:#0f172a}
+  .fb-box{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:14.5px;border:1px solid #cbd5e1;background:#f8fafc}
+
+  .memo-box{background:linear-gradient(135deg,#fefce8,#fffbeb);border:2px solid #fde047;border-radius:14px;padding:16px 18px;margin:10px 0}
+  .memo-box li{margin:8px 0;font-size:16px}
+  .step-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px}
+
+  .stars-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:14px 0}
+  @media(max-width:600px){.stars-grid{grid-template-columns:repeat(3,1fr)}}
+  .star-btn{
+    background:linear-gradient(145deg,#f59e0b,#d97706);color:#fff;border:0;border-radius:16px;padding:18px 10px;
+    font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(217,119,6,.25);transition:transform .15s;
+  }
+  .star-btn:hover{transform:translateY(-3px)}
+  .star-btn.done{background:#16a34a;box-shadow:none}
+  .candy-bar{background:#fdf2f8;border:1px solid #fbcfe8;color:#9d174d;padding:10px 14px;border-radius:12px;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+
+  .q-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;padding:18px;margin:14px 0}
+  .q-card.q-correct{border-left:6px solid #16a34a}
+  .q-card.q-wrong{border-left:6px solid #dc2626}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .b-nb{background:#dbeafe;color:#1e40af}
+  .b-th{background:#fef3c7;color:#92400e}
+  .b-vd{background:#fce7f3;color:#9d174d}
+  .b-type{background:#e2e8f0;color:#334155}
+  .option{display:block;margin:7px 0;padding:9px 12px;border-radius:9px;border:1px solid #e2e8f0;cursor:pointer;transition:background .15s}
+  .option:hover{background:#eff6ff}
+  .opt-correct{background:#dcfce7 !important;border-color:#86efac !important;color:#14532d;font-weight:700}
+  .opt-wrong{background:#fee2e2 !important;border-color:#fca5a5 !important;color:#7f1d1d;text-decoration:line-through}
+  .tf-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;margin:7px 0;border-radius:9px;background:#f8fafc;border:1px solid #e2e8f0}
+  .tf-choices label{margin-left:14px;font-weight:700;cursor:pointer}
+  .match-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;padding:9px 12px;margin:7px 0;border-radius:9px;background:#f8fafc;border:1px solid #e2e8f0}
+  @media(max-width:620px){.match-row{grid-template-columns:1fr}}
+  .fill-box{padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;line-height:2.2;margin-top:8px}
+  .word-bank{margin-top:8px;font-size:14px;color:#334155;background:#eff6ff;padding:7px 12px;border-radius:8px;display:inline-block}
+  .explain-box{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:14.5px;line-height:1.55}
+  .explain-box.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+  .explain-box.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+  .timer{font-size:22px;font-weight:800;color:var(--teal)}
+  .rank-pill{display:inline-block;padding:5px 14px;border-radius:999px;font-weight:800;font-size:15px}
+  .rank-htt{background:#dcfce7;color:#15803d}
+  .rank-ht{background:#dbeafe;color:#1d4ed8}
+  .rank-cht{background:#fee2e2;color:#b91c1c}
+  .review-item{padding:11px 14px;margin:8px 0;border-radius:10px;border:1px solid #e2e8f0;font-size:15px}
+  .review-item.ok{background:#f0fdf4;border-color:#bbf7d0}
+  .review-item.bad{background:#fef2f2;border-color:#fecaca}
+  .hidden{display:none !important}
+  footer{text-align:center;font-size:13px;color:var(--muted);padding:16px 0}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="hero">
+    <div class="tag">TIN HỌC LỚP 4 • KẾT NỐI TRI THỨC VỚI CUỘC SỐNG • CHỦ ĐỀ 5</div>
+    <h1>Bài 7: Tạo bài trình chiếu</h1>
+    <p>Hệ thống học tập & Đánh giá toàn diện từ lúc tương tác bài giảng đến trắc nghiệm (100% tiến độ & thang điểm 10)</p>
+  </header>
+
+  <div class="tracker-bar" role="region" aria-label="Bảng theo dõi tiến độ và điểm số">
+    <div class="tracker-top">
+      <div style="font-weight:800;color:#1e3a8a;font-size:15px">📊 Tiến độ tương tác & Điểm đánh giá của em:</div>
+      <div class="tracker-metrics">
+        <span class="metric-pill m-pct" id="ui-pct">Tiến độ bài học: 0%</span>
+        <span class="metric-pill m-inter" id="ui-inter-score">Điểm tương tác: 0.0 / 5.0</span>
+        <span class="metric-pill m-quiz" id="ui-quiz-score">Điểm trắc nghiệm: 0.0 / 5.0</span>
+        <span class="metric-pill m-total" id="ui-total-score">🏆 Tổng điểm: 0.0 / 10</span>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="ui-progress-fill"></div>
+    </div>
+    <div class="tracker-sub">
+      <span id="chk-read">⬜ Đọc & Khám phá (10%)</span>
+      <span id="chk-lab1">⬜ Thực hành nhiệm vụ 1 (15%)</span>
+      <span id="chk-lab2">⬜ Thực hành nhiệm vụ 2 (10%)</span>
+      <span id="chk-memo">⬜ Xác nhận Ghi nhớ (10%)</span>
+      <span id="chk-stars">⬜ Ngôi sao may mắn: 0/5 (25%)</span>
+      <span id="chk-quiz">⬜ Nộp bài trắc nghiệm 10 câu (30%)</span>
+    </div>
+  </div>
+
+  <div class="card" style="padding:14px 18px;background:#f8fafc;border-color:#93c5fd">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+      <div style="font-weight:800;color:#1e3a8a">👩‍🎓 Thông tin học sinh tham gia bài học:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;flex:1;max-width:620px">
+        <input id="stu-name" type="text" maxlength="100" style="flex:2;min-width:180px" placeholder="Nhập Họ và tên của em...">
+        <input id="stu-class" type="text" maxlength="30" style="flex:1;min-width:110px" placeholder="Lớp (VD: 4.2)">
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-tabs" aria-label="Các chặng học tập">
+    <button class="tab-btn active" onclick="switchTab(0)" id="tab-0">
+      <span class="step-num">Chặng 1 (35%)</span>
+      <span>🚀 Khởi động & Khám phá</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(1)" id="tab-1">
+      <span class="step-num">Chặng 2 (10%)</span>
+      <span>💡 Ghi nhớ & Quy trình</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(2)" id="tab-2">
+      <span class="step-num">Chặng 3 (25%)</span>
+      <span>⭐ Ngôi sao may mắn</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(3)" id="tab-3">
+      <span class="step-num">Chặng 4 (30%)</span>
+      <span>📝 Trắc nghiệm (10/40 câu)</span>
+    </button>
+  </nav>
+
+  <section id="stage-0">
+    <div class="card">
+      <h2>🚀 Hoạt động Khởi động & Khám phá: Gõ chữ tiếng Việt & Tạo bài trình chiếu (SGK trang 30–33)</h2>
+      <div class="guide-note">
+        <div class="guide-text"><b>Gợi ý khám phá:</b> So sánh cách gõ tiếng Việt rõ nghĩa, nắm quy tắc gõ TELEX/VNI, cách sắp xếp nội dung 4 trang chiếu và cách lưu tệp vào thư mục.</div>
+        <button class="btn btn-sm" onclick="markStepDone(this,'read1','Đã đọc khám phá Bài 7 (+5%)')">✓ Đã đọc khám phá (+5%)</button>
+      </div>
+      
+<div class="grid-3">
+  <div class="sgk-fig">
+    <div style="font-weight:800;color:#1e3a8a;margin-bottom:6px">Gõ chữ tiếng Việt (Telex & VNI)</div>
+    <p style="margin:0;font-size:14.5px">Cần phần mềm hỗ trợ gõ tiếng Việt (Unikey, Vietkey, EVkey...). Kiểu <b>Telex</b>: <code>aa→â, oo→ô, ee→ê, dd→đ, aw→ă, ow→ơ, uw→ư</code>; dấu thanh: <code>s, f, r, x, j</code>. Kiểu <b>VNI</b>: <code>a6, o6, e6, d9, a8, o7, u7</code>; dấu <code>1, 2, 3, 4, 5</code>.</p>
+    <div class="sgk-fig-caption">Hoạt động & Mục 1 (SGK trang 30–31)</div>
+  </div>
+  <div class="sgk-fig">
+    <div style="font-weight:800;color:#0f766e;margin-bottom:6px">Tạo 4 trang chiếu giới thiệu cảnh đẹp</div>
+    <p style="margin:0;font-size:14.5px">Trang 1: Tiêu đề, họ tên, lớp. Trang 2: Liệt kê danh sách địa danh. Trang 3: Hình ảnh phong cảnh quê hương kèm chú thích. Trang 4: Lời mời đến thăm.</p>
+    <div class="sgk-fig-caption">Thực hành mục 2a & Hình 26 (SGK trang 32)</div>
+  </div>
+  <div class="sgk-fig">
+    <div style="font-weight:800;color:#b45309;margin-bottom:6px">Lưu tệp vào thư mục & thoát phần mềm</div>
+    <p style="margin:0;font-size:14.5px">Chọn <b>File → Save</b> (cửa sổ <b>Save As</b>), chọn đúng thư mục của em (ví dụ <code>Lop 4A2 &gt; Nhom 2 &gt; Thu An</code>), nhập tên tệp rồi nhấn <b>Save</b>.</p>
+    <div class="sgk-fig-caption">Thực hành mục 2b & Hình 27 (SGK trang 32–33)</div>
+  </div>
+</div>
+
+    </div>
+
+    <div class="card">
+      <h2>🧪 Thực hành tương tác có chấm điểm: Gõ tiếng Việt TELEX/VNI & Bố cục trang chiếu</h2>
+      <div class="guide-note">
+        <div class="guide-text"><b>Hướng dẫn thực hành:</b> Hoàn thành 2 nhiệm vụ thực hành tương tác dưới đây để tích luỹ 25% tiến độ thực hành của Chặng 1.</div>
+        <button class="btn btn-sm btn-teal" onclick="markStepDone(this,'read2','Đã đọc hướng dẫn thực hành (+5%)')">✓ Đã đọc hướng dẫn (+5%)</button>
+      </div>
+      
+<div class="lab-box">
+  <div style="font-weight:800;color:#1e3a8a;margin-bottom:8px">1️⃣ Nhiệm vụ 1 (+15%): Luyện gõ Telex & VNI ra chữ tiếng Việt chuẩn</div>
+  <p style="margin:0 0 10px;font-size:14.5px">Hãy chọn từ tiếng Việt đúng tương ứng với cách gõ trong SGK (trang 31–33):</p>
+  <div class="grid-2">
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>1. Gõ kiểu Telex: <code>quee huwowng</code></b><br>
+      <select id="b7-t1" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn kết quả --</option>
+        <option value="que_huong">quê hương</option>
+        <option value="que_huoc">quê hước</option>
+        <option value="que_huong_hoi">quể hương</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>2. Gõ kiểu Telex: <code>khieem toons</code></b><br>
+      <select id="b7-t2" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn kết quả --</option>
+        <option value="khiem_ton">khiêm tốn</option>
+        <option value="khiem_ton_huyen">khiêm tồn</option>
+        <option value="khiem_ton_hoi">khiêm tổn</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>3. Gõ kiểu Telex: <code>Uoongs nuwowcs nhows nguoonf</code></b><br>
+      <select id="b7-t3" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn kết quả --</option>
+        <option value="uong_nuoc">Uống nước nhớ nguồn</option>
+        <option value="uong_nuoc_sai">Uồng nước nhớ nguồn</option>
+        <option value="uong_nuoc_hoi">Uổng nước nhớ nguồn</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>4. Gõ kiểu VNI: <code>que6 hu7o7ng</code></b><br>
+      <select id="b7-t4" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn kết quả --</option>
+        <option value="que_huong">quê hương</option>
+        <option value="que_hoa">quê hoa</option>
+        <option value="que_huu">quê hữu</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-sm btn-green" style="margin-top:10px" onclick="checkB7Lab1()">✅ Chấm điểm Nhiệm vụ 1</button>
+  <div id="b7-fb1" class="fb-box hidden"></div>
+</div>
+
+<div class="lab-box">
+  <div style="font-weight:800;color:#1e3a8a;margin-bottom:8px">2️⃣ Nhiệm vụ 2 (+10%): Sắp xếp bố cục 4 trang chiếu "Cảnh đẹp quê hương" (SGK trang 32)</div>
+  <p style="margin:0 0 8px;font-size:14.5px">Hãy chọn đúng nội dung của từng trang chiếu theo gợi ý SGK:</p>
+  <div class="grid-2">
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>Trang 1:</b>
+      <select id="b7-s1" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn nội dung Trang 1 --</option>
+        <option value="s1">Tiêu đề, họ tên, lớp</option>
+        <option value="s2">Liệt kê danh sách địa danh</option>
+        <option value="s3">Hình ảnh phong cảnh kèm chú thích</option>
+        <option value="s4">Lời mời đến thăm</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>Trang 2:</b>
+      <select id="b7-s2" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn nội dung Trang 2 --</option>
+        <option value="s1">Tiêu đề, họ tên, lớp</option>
+        <option value="s2">Liệt kê danh sách địa danh</option>
+        <option value="s3">Hình ảnh phong cảnh kèm chú thích</option>
+        <option value="s4">Lời mời đến thăm</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>Trang 3:</b>
+      <select id="b7-s3" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn nội dung Trang 3 --</option>
+        <option value="s1">Tiêu đề, họ tên, lớp</option>
+        <option value="s2">Liệt kê danh sách địa danh</option>
+        <option value="s3">Hình ảnh phong cảnh kèm chú thích</option>
+        <option value="s4">Lời mời đến thăm</option>
+      </select>
+    </div>
+    <div style="background:#fff;padding:10px;border-radius:10px;border:1px solid #cbd5e1">
+      <b>Trang 4:</b>
+      <select id="b7-s4" style="margin-top:6px;width:100%">
+        <option value="">-- Chọn nội dung Trang 4 --</option>
+        <option value="s1">Tiêu đề, họ tên, lớp</option>
+        <option value="s2">Liệt kê danh sách địa danh</option>
+        <option value="s3">Hình ảnh phong cảnh kèm chú thích</option>
+        <option value="s4">Lời mời đến thăm</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-sm btn-green" style="margin-top:10px" onclick="checkB7Lab2()">✅ Chấm điểm Nhiệm vụ 2</button>
+  <div id="b7-fb2" class="fb-box hidden"></div>
+</div>
+
+    </div>
+  </section>
+
+  <section id="stage-1" class="hidden">
+    <div class="card">
+      <h2>💡 Hộp kiến thức Ghi nhớ (SGK Tin học 4 – Trang 31–33)</h2>
+      <div class="guide-note">
+        <div class="guide-text"><b>Ghi nhớ trọng tâm:</b> Đọc kĩ nội dung cốt lõi của bài học và bấm xác nhận hoàn thành Ghi nhớ.</div>
+        <button class="btn btn-sm" onclick="handleMemoDone(this)">✓ Xác nhận đã đọc Ghi nhớ (+10%)</button>
+      </div>
+      
+<div class="memo-box">
+  <ul>
+    <li>⌨️ Để gõ được văn bản tiếng Việt trên máy tính cần có <b>phần mềm hỗ trợ gõ tiếng Việt</b> (như Unikey, Vietkey, EVkey...).</li>
+    <li>🔤 Có hai kiểu gõ tiếng Việt phổ biến là <b>TELEX</b> và <b>VNI</b>. Nhấn giữ phím <b>Shift</b> và gõ phím chữ để gõ <b>chữ hoa</b>.</li>
+    <li>💾 Khi tạo bài trình chiếu, cần trình bày nội dung từng trang rõ ràng, chèn ảnh minh hoạ phù hợp và <b>lưu tệp vào đúng thư mục</b> theo yêu cầu.</li>
+  </ul>
+</div>
+
+      <h3>🛠️ Quy trình thực hành chuẩn</h3>
+      
+<div class="grid-2">
+  <div class="step-list">
+    <strong>Tạo bài trình chiếu tiếng Việt có ảnh</strong>
+    <ol>
+      <li><b>Bước 1:</b> Kiểm tra phần mềm gõ tiếng Việt (ví dụ Unikey) đang ở chế độ gõ tiếng Việt (<code>V</code>).</li>
+      <li><b>Bước 2:</b> Khởi động phần mềm trình chiếu (ví dụ PowerPoint).</li>
+      <li><b>Bước 3:</b> Tạo các trang chiếu, gõ nội dung tiếng Việt có chữ hoa, chữ thường, dấu thanh và chèn ảnh minh hoạ.</li>
+    </ol>
+  </div>
+  <div class="step-list">
+    <strong>Lưu tệp vào thư mục & thoát phần mềm</strong>
+    <ol>
+      <li><b>Bước 1:</b> Chọn <b>File → Save</b> để mở cửa sổ <b>Save As</b>.</li>
+      <li><b>Bước 2:</b> Chọn đúng thư mục của em (ví dụ thư mục tên em tạo ở Bài 5) và gõ tên tệp.</li>
+      <li><b>Bước 3:</b> Nhấn <b>Save</b> để lưu tệp, sau đó thoát khỏi phần mềm trình chiếu.</li>
+    </ol>
+  </div>
+</div>
+
+    </div>
+  </section>
+
+  <section id="stage-2" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <h2>⭐ Hoạt động Vận dụng – Trò chơi: Ngôi sao may mắn (25% tiến độ)</h2>
+        <div class="candy-bar">🍬 Số kẹo thưởng: <span id="candy-count">0</span> viên • Hoàn thành: <span id="star-done-count">0</span>/5 sao</div>
+      </div>
+      <p>Mỗi ngôi sao trả lời đúng giúp em nhận kẹo thưởng và cộng thêm <b>5% tiến độ tương tác</b> bài học!</p>
+      <div class="stars-grid">
+        <button class="star-btn" id="star-0" onclick="openStar(0)">⭐ Ngôi sao 1<br><small>(+3 kẹo • 5%)</small></button>
+        <button class="star-btn" id="star-1" onclick="openStar(1)">⭐ Ngôi sao 2<br><small>(+2 kẹo • 5%)</small></button>
+        <button class="star-btn" id="star-2" onclick="openStar(2)">⭐ Ngôi sao 3<br><small>(+5 kẹo • 5%)</small></button>
+        <button class="star-btn" id="star-3" onclick="openStar(3)">⭐ Ngôi sao 4<br><small>(+8 kẹo • 5%)</small></button>
+        <button class="star-btn" id="star-4" onclick="openStar(4)">⭐ Ngôi sao 5<br><small>(+10 kẹo • 5%)</small></button>
+      </div>
+      <div id="star-stage" class="card hidden" style="background:#fffbeb;border-color:#fde68a"></div>
+    </div>
+  </section>
+
+  <section id="stage-3" class="hidden">
+    <div class="card">
+      <h2>📝 Luyện tập & Đánh giá trắc nghiệm (30% tiến độ • 5.0 điểm)</h2>
+      <p style="margin-top:0;color:#475569">Ngân hàng gồm <b>40 câu hỏi</b> đầy đủ các mức độ (<i>Nhận biết, Thông hiểu, Vận dụng</i>) và 4 dạng bài (<i>Trắc nghiệm, Đúng/Sai, Nối cột, Điền từ</i>) bám sát Bài 7 SGK Tin học 4. Mỗi lượt làm bài hệ thống xuất ngẫu nhiên <b>10 câu</b>, chấm điểm chi tiết kèm <b>đáp án giảng giải</b>, cộng hợp với <b>điểm tương tác các chặng 1–3</b> để tính <b>Tổng điểm / 10</b> và gửi về Google Sheets của giáo viên.</p>
+      <div id="quiz-setup">
+        <button class="btn" id="btn-start-quiz" onclick="startQuiz()">🚀 Bắt đầu làm bài trắc nghiệm (10 câu ngẫu nhiên)</button>
+      </div>
+      <div id="quiz-work" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px 16px;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:12px">
+          <div class="timer" id="quiz-timer">⏱️ 08:00</div>
+          <div style="font-size:14px;color:#475569;font-weight:600">Cấu trúc đề: 4 Nhận biết • 3 Thông hiểu • 3 Vận dụng (10 câu)</div>
+        </div>
+        <div id="quiz-questions"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn btn-green" id="btn-submit-quiz" onclick="submitQuiz()">✅ Nộp bài, Xem giảng giải & Gửi điểm tổng hợp</button>
+        </div>
+      </div>
+      <div id="quiz-result" class="hidden" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <footer>
+    Học liệu điện tử tương tác Tin học 4 – Bài 7: Tạo bài trình chiếu • Ghi nhận % tương tác & điểm số về Google Sheets.
+  </footer>
+</div>
+
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbzAKzG7QD3AaIkuzNXmIz_zCCdtE_V4dful3J_45I5v9Y0qPtDbVAoXKlqzeMwjEq5Drg/exec";
+const STAR_QUESTIONS = [{"q": "Câu 1: Để gõ được tiếng Việt trên máy tính, cần có gì?", "opts": ["Phần mềm hỗ trợ gõ tiếng Việt (như Unikey, Vietkey, EVkey...)", "Chỉ cần có máy in", "Chỉ cần có chuột máy tính"], "ans": 0, "candy": 3}, {"q": "Câu 2: Hai kiểu gõ tiếng Việt phổ biến được nêu trong SGK là gì?", "opts": ["TELEX và VNI", "ABC và QWERTY", "HTML và CSS"], "ans": 0, "candy": 2}, {"q": "Câu 3: Để gõ chữ hoa, em thực hiện thế nào?", "opts": ["Nhấn giữ phím Shift và gõ phím chữ", "Nhấn phím Delete", "Nhấn phím Space"], "ans": 0, "candy": 5}, {"q": "Câu 4: Theo kiểu gõ Telex, để có chữ 'ô' và dấu sắc ta gõ thế nào?", "opts": ["Gõ 'oo' cho chữ ô và 's' cho dấu sắc", "Gõ 'aa' cho chữ ô và 'f' cho dấu sắc", "Gõ 'dd' cho chữ ô và 'r' cho dấu sắc"], "ans": 0, "candy": 8}, {"q": "Câu 5: Khi lưu bài trình chiếu vào thư mục của em, em chọn lệnh nào trên bảng chọn File?", "opts": ["Save", "Delete", "Close"], "ans": 0, "candy": 10}];
+const BANK_40 = [{"type": "mcq", "level": "NB", "q": "Để gõ được tiếng Việt trên máy tính, cần có yếu tố nào sau đây?", "options": ["Phần mềm hỗ trợ gõ tiếng Việt (như Unikey, Vietkey, EVkey...)", "Chỉ cần bật loa ngoài", "Chỉ cần rút cáp mạng", "Chỉ cần thu nhỏ cửa sổ"], "answer": 0, "explain": "SGK trang 30–31 nêu rõ để gõ được tiếng Việt trên máy tính cần có phần mềm hỗ trợ như Unikey, Vietkey, EVkey..."}, {"type": "mcq", "level": "NB", "q": "Hai kiểu gõ tiếng Việt phổ biến là gì?", "options": ["TELEX và VNI", "PDF và MP3", "JPG và PNG", "USB và HDMI"], "answer": 0, "explain": "Có hai kiểu gõ tiếng Việt phổ biến là TELEX và VNI."}, {"type": "mcq", "level": "NB", "q": "Để gõ chữ hoa, em thực hiện thao tác nào?", "options": ["Nhấn giữ phím Shift và gõ phím chữ", "Nhấn phím Tab", "Nhấn phím Esc", "Nhấn phím Backspace"], "answer": 0, "explain": "Nhấn giữ phím Shift và gõ phím chữ để gõ được chữ hoa."}, {"type": "mcq", "level": "NB", "q": "Theo kiểu gõ Telex (Bảng 1 – SGK trang 31), để có chữ 'â' em gõ thế nào?", "options": ["aa", "aw", "ee", "oo"], "answer": 0, "explain": "Trong kiểu Telex, 'aa' tạo thành chữ 'â'."}, {"type": "mcq", "level": "NB", "q": "Theo kiểu gõ Telex (Bảng 1 – SGK trang 31), để có chữ 'đ' em gõ thế nào?", "options": ["dd", "ow", "uw", "aw"], "answer": 0, "explain": "Trong kiểu Telex, 'dd' tạo thành chữ 'đ'."}, {"type": "mcq", "level": "NB", "q": "Theo kiểu gõ Telex (Bảng 2 – SGK trang 31), các phím 's', 'f', 'r', 'x', 'j' lần lượt tạo ra dấu thanh nào?", "options": ["Sắc, huyền, hỏi, ngã, nặng", "Huyền, sắc, ngã, hỏi, nặng", "Ngã, nặng, sắc, huyền, hỏi", "Hỏi, ngã, nặng, sắc, huyền"], "answer": 0, "explain": "Bảng 2 SGK trang 31: s (sắc), f (huyền), r (hỏi), x (ngã), j (nặng)."}, {"type": "mcq", "level": "NB", "q": "Theo kiểu gõ VNI (Bảng 3 – SGK trang 31), để tạo chữ 'ô' em gõ thêm số nào?", "options": ["6 (o6)", "7 (o7)", "8 (o8)", "9 (o9)"], "answer": 0, "explain": "Trong kiểu VNI, số 6 đi kèm 'a, o, e' tạo thành 'â, ô, ê'."}, {"type": "mcq", "level": "NB", "q": "Theo kiểu gõ VNI (Bảng 3 – SGK trang 31), các số '1', '2', '3', '4', '5' tương ứng với dấu thanh nào?", "options": ["Sắc, huyền, hỏi, ngã, nặng", "Hỏi, ngã, nặng, sắc, huyền", "Nặng, ngã, hỏi, huyền, sắc", "Huyền, sắc, hỏi, ngã, nặng"], "answer": 0, "explain": "Theo VNI: 1 là sắc, 2 là huyền, 3 là hỏi, 4 là ngã, 5 là nặng."}, {"type": "mcq", "level": "NB", "q": "Khi lưu tệp trình chiếu lần đầu bằng lệnh Save trong File, cửa sổ nào xuất hiện?", "options": ["Save As", "Open", "Print", "Slide Show"], "answer": 0, "explain": "Cửa sổ Save As xuất hiện để chọn thư mục lưu trữ và đặt tên tệp (Hình 27 trang 33)."}, {"type": "mcq", "level": "NB", "q": "Trong Unikey ở góc dưới bên phải màn hình nền, chữ 'V' biểu thị chế độ gõ nào?", "options": ["Chế độ gõ tiếng Việt", "Chế độ gõ tiếng Anh", "Chế độ tắt máy", "Chế độ phóng to"], "answer": 0, "explain": "Chữ V trong Unikey là chế độ gõ tiếng Việt, còn chữ E là chế độ gõ tiếng Anh."}, {"type": "mcq", "level": "NB", "q": "Theo gợi ý tạo bài trình chiếu 'Cảnh đẹp quê hương' (SGK trang 32), Trang 1 thường trình bày nội dung gì?", "options": ["Tiêu đề, họ tên, lớp", "Lời mời đến thăm", "Danh sách địa danh", "Chỉ có một bản nhạc"], "answer": 0, "explain": "Trang 1 trình bày tiêu đề, họ tên, lớp."}, {"type": "tf", "level": "NB", "q": "Xác định Đúng hoặc Sai về gõ tiếng Việt và tạo bài trình chiếu:", "items": [{"text": "a) TELEX và VNI là hai kiểu gõ tiếng Việt phổ biến.", "ans": true}, {"text": "b) Để gõ chữ hoa, em có thể nhấn giữ phím Shift và gõ phím chữ.", "ans": true}, {"text": "c) Không cần phần mềm hỗ trợ gõ tiếng Việt vẫn gõ được dấu tiếng Việt trong mọi phần mềm.", "ans": false}, {"text": "d) Cần lưu tệp vào đúng thư mục theo yêu cầu.", "ans": true}], "explain": "Ý a, b, d đúng. Ý c sai vì cần phần mềm hỗ trợ gõ tiếng Việt như Unikey, Vietkey, EVkey..."}, {"type": "match", "level": "NB", "q": "Nối cách gõ Telex ở cột A với chữ/dấu tương ứng ở cột B:", "left": ["1. aa", "2. uw", "3. f", "4. j"], "right": ["a) chữ â", "b) chữ ư", "c) dấu huyền", "d) dấu nặng"], "pairs": [0, 1, 2, 3], "explain": "Theo Bảng 1 & Bảng 2 SGK trang 31: aa→â, uw→ư, f→huyền, j→nặng."}, {"type": "fill", "level": "NB", "q": "Điền từ thích hợp (tiếng Việt, TELEX, VNI, Shift) vào chỗ trống:", "text": "Để gõ được {0} cần có phần mềm hỗ trợ gõ tiếng Việt. Hai kiểu gõ phổ biến là {1} và {2}. Để gõ chữ hoa, em nhấn giữ phím {3} và gõ phím chữ.", "blanks": ["tiếng Việt", "TELEX", "VNI", "Shift"], "wordBank": ["tiếng Việt", "TELEX", "VNI", "Shift", "Delete"], "explain": "Kiến thức cơ bản mục 1 SGK Tin học 4 trang 30–31."}, {"type": "mcq", "level": "TH", "q": "Khi gõ dấu thanh tiếng Việt theo kiểu Telex, ở vị trí nào của từ em có thể gõ phím dấu thanh?", "options": ["Có thể gõ phím dấu thanh ở cuối từ", "Chỉ được gõ trước chữ cái đầu tiên", "Phải nhấn phím Enter mới có dấu", "Không thể gõ dấu bằng Telex"], "answer": 0, "explain": "SGK trang 31 hướng dẫn khi gõ dấu thanh tiếng Việt, em có thể gõ phím dấu thanh ở cuối từ."}, {"type": "mcq", "level": "TH", "q": "Để có từ 'quê hương', cách gõ nào sau đây đúng theo kiểu Telex?", "options": ["quee huwowng", "quee huong", "que huwowng", "que huong"], "answer": 0, "explain": "'qu' + 'ee' (ê) + 'e' + ' ' + 'h' + 'uwowng' (ương) -> 'quê hương'."}, {"type": "mcq", "level": "TH", "q": "Để có từ 'khiêm tốn', em gõ như thế nào theo kiểu Telex?", "options": ["khieem toons", "khiem toonr", "khieem toonr", "khieem toonf"], "answer": 0, "explain": "'khieem' -> 'khiêm', 'toons' -> 'tốn' (o + o + n + s)."}, {"type": "mcq", "level": "TH", "q": "Trong Hình 24 (SGK trang 30), trang chiếu ghi 'Cảnh đẹp quê hương' rõ nghĩa hơn trang ghi 'Canh dep que huong' vì sao?", "options": ["Vì có đầy đủ dấu thanh và chữ tiếng Việt chuẩn giúp người đọc hiểu đúng nghĩa", "Vì có nhiều màu nền hơn", "Vì dùng chữ nhỏ hơn", "Vì không có dấu cách"], "answer": 0, "explain": "Văn bản tiếng Việt đầy đủ chữ và dấu thanh giúp đọc rõ ràng, hiểu chính xác nghĩa."}, {"type": "mcq", "level": "TH", "q": "Theo gợi ý 4 trang chiếu ở trang 32, Trang 2 và Trang 4 lần lượt có nội dung gì?", "options": ["Trang 2: Liệt kê danh sách địa danh; Trang 4: Lời mời đến thăm", "Trang 2: Lời mời đến thăm; Trang 4: Tiêu đề, họ tên, lớp", "Trang 2: Hình ảnh; Trang 4: Họ tên, lớp", "Trang 2: Họ tên, lớp; Trang 4: Danh sách địa danh"], "answer": 0, "explain": "Theo trang 32: Trang 1 là tiêu đề/họ tên/lớp, Trang 2 là danh sách địa danh, Trang 3 là ảnh + chú thích, Trang 4 là lời mời đến thăm."}, {"type": "mcq", "level": "TH", "q": "Khi đang gõ văn bản tiếng Việt mà kết quả hiện ra 'Canh dep que huong' (không có dấu), bước đầu tiên em nên kiểm tra gì?", "options": ["Kiểm tra phần mềm gõ tiếng Việt (như Unikey) đã bật và chọn chế độ gõ tiếng Việt (V) cùng kiểu gõ phù hợp chưa", "Thay đổi độ phân giải màn hình", "Rút dây chuột ra cắm lại", "Xoá thư mục lưu trữ"], "answer": 0, "explain": "Cần kiểm tra Unikey/phần mềm gõ tiếng Việt đã mở và đặt đúng chế độ gõ tiếng Việt (V) chưa."}, {"type": "mcq", "level": "TH", "q": "Trong cửa sổ Save As (Hình 27 trang 33), để lưu tệp vào đúng thư mục cá nhân của mình, em cần làm gì trước khi nhấn Save?", "options": ["Chọn đúng thư mục lưu trữ (ví dụ thư mục tên em) và gõ tên tệp vào ô File name", "Nhấn nút Cancel", "Nhấn phím Delete", "Đóng trình duyệt"], "answer": 0, "explain": "Cần chọn đúng thư mục đích và nhập tên tệp rõ ràng rồi mới nháy Save."}, {"type": "mcq", "level": "TH", "q": "Theo kiểu Telex, để gõ từ 'đi chơi' (ví dụ trang 31), em gõ thế nào?", "options": ["ddi chowi", "di choi", "ddi choi", "di chowi"], "answer": 0, "explain": "'dd' -> 'đ', 'ow' -> 'ơ' nên 'ddi chowi' tạo thành 'đi chơi'."}, {"type": "mcq", "level": "TH", "q": "Khi tạo bài trình chiếu giới thiệu cảnh đẹp, việc chèn hình ảnh kèm chú thích (như Cầu Trường Tiền ở Hình 26) có tác dụng gì?", "options": ["Giúp trang chiếu sinh động, trực quan và người xem dễ nhận biết địa danh", "Làm trang chiếu bị mờ đi", "Làm mất tiêu đề bài trình chiếu", "Không có tác dụng gì"], "answer": 0, "explain": "Hình ảnh minh hoạ có chú thích giúp bài trình chiếu sinh động và dễ hiểu hơn."}, {"type": "mcq", "level": "TH", "q": "Nếu gõ nhầm thành 'que6 huong' theo kiểu VNI, tại sao chữ 'ương' chưa đúng?", "options": ["Vì 'u' và 'o' cần thêm số '7' ('u7o7ng') mới thành 'ương'", "Vì VNI không gõ được chữ 'ư'", "Vì phải dùng phím Ctrl", "Vì phải đổi sang tiếng Anh"], "answer": 0, "explain": "Trong VNI, số 7 đi kèm 'o, u' tạo thành 'ơ, ư'."}, {"type": "tf", "level": "TH", "q": "Xác định Đúng hoặc Sai về thao tác gõ và lưu bài trình chiếu:", "items": [{"text": "a) Khi gõ dấu thanh kiểu Telex, có thể gõ phím dấu thanh ở cuối từ.", "ans": true}, {"text": "b) Biểu tượng Unikey ở góc dưới bên phải giúp chuyển đổi giữa gõ tiếng Anh và tiếng Việt.", "ans": true}, {"text": "c) Khi lưu tệp trình chiếu, không cần chọn thư mục lưu trữ.", "ans": false}, {"text": "d) Có thể gõ chữ hoa bằng cách nhấn giữ phím Shift và gõ phím chữ.", "ans": true}], "explain": "Ý a, b, d đúng. Ý c sai vì cần lưu tệp vào đúng thư mục theo yêu cầu."}, {"type": "match", "level": "TH", "q": "Ghép trang chiếu gợi ý ở cột A (SGK trang 32) với nội dung phù hợp ở cột B:", "left": ["1. Trang 1", "2. Trang 2", "3. Trang 3", "4. Trang 4"], "right": ["a) Tiêu đề, họ tên, lớp", "b) Liệt kê danh sách địa danh", "c) Một hình ảnh phong cảnh quê hương có chú thích", "d) Lời mời đến thăm"], "pairs": [0, 1, 2, 3], "explain": "Bố cục 4 trang chiếu gợi ý cho chủ đề cảnh đẹp quê hương ở SGK trang 32."}, {"type": "fill", "level": "TH", "q": "Điền từ thích hợp (Save, thư mục, cuối từ, chèn thêm) vào chỗ trống:", "text": "Khi gõ kiểu Telex, em có thể gõ dấu thanh ở {0}. Khi tạo bài trình chiếu, em gõ nội dung và có thể {1} ảnh. Cuối cùng, em chọn {2} để lưu tệp vào đúng {3} của mình.", "blanks": ["cuối từ", "chèn thêm", "Save", "thư mục"], "wordBank": ["cuối từ", "chèn thêm", "Save", "thư mục", "đầu dòng"], "explain": "Tổng hợp quy trình soạn và lưu tệp trình chiếu theo Bài 7 SGK Tin học 4."}, {"type": "mcq", "level": "VD", "q": "Em tạo bài trình chiếu giới thiệu trường em (Luyện tập 2 – trang 33) gồm 4 trang và lưu tên 'Truong em'. Em nên lưu tệp này ở đâu?", "options": ["Trong thư mục mang tên em đã tạo từ Bài 5 để dễ tìm lại và quản lí", "Lưu bừa ra nhiều nơi không nhớ vị trí", "Không cần lưu tệp", "Xoá ngay sau khi gõ xong"], "answer": 0, "explain": "Lưu vào thư mục của em tạo từ Bài 5 giúp tổ chức lưu trữ gọn gàng, khoa học."}, {"type": "mcq", "level": "VD", "q": "Để gõ câu 'Uống nước nhớ nguồn' (ví dụ trang 31) theo kiểu Telex, em gõ chuỗi kí tự nào?", "options": ["Uoongs nuwowcs nhows nguoonf", "Uong nuoc nho nguon", "Uoong nuowc nhow nguoon", "Uongs nuwowcs nhows nguonf"], "answer": 0, "explain": "Theo ví dụ SGK trang 31: 'Uoongs nuwowcs nhows nguoonf' tạo thành 'Uống nước nhớ nguồn'."}, {"type": "mcq", "level": "VD", "q": "Khi tạo bài trình chiếu về môn thể thao yêu thích (Vận dụng – trang 33), cách trình bày nào giúp người xem dễ theo dõi nhất?", "options": ["Chia các ý hợp lí qua từng trang (tên môn thể thao, hình ảnh, cách chơi, lợi ích) và viết tiếng Việt có dấu rõ ràng", "Gõ toàn chữ không dấu dính liền thành một khối dài", "Dùng quá nhiều chữ viết tắt khó hiểu", "Bỏ trống toàn bộ các trang chiếu"], "answer": 0, "explain": "Phân chia nội dung từng trang hợp lí và gõ tiếng Việt có dấu rõ ràng giúp bài trình chiếu dễ đọc, dễ hiểu."}, {"type": "mcq", "level": "VD", "q": "Bạn An gõ chữ 'Đ' hoa trong tiêu đề 'Đồi Vọng Cảnh' bằng kiểu Telex. Thao tác nào sau đây đúng?", "options": ["Giữ phím Shift và gõ 'd', rồi gõ thêm 'd' (hoặc bật Caps Lock/Shift cho chữ Đ hoa)", "Chỉ gõ một chữ 'd' thường", "Nhấn phím Delete", "Nhấn phím Tab"], "answer": 0, "explain": "Giữ Shift gõ chữ hoa và dùng 'dd' cho kí tự 'đ/Đ' theo quy tắc Telex."}, {"type": "mcq", "level": "VD", "q": "Sau khi hoàn thành bài trình chiếu 'Canh dep que huong' và lưu vào thư mục của mình, bước tiếp theo theo hướng dẫn mục 2b là gì?", "options": ["Thoát khỏi phần mềm trình chiếu", "Đổi tên ổ đĩa thành tên khác", "Xoá thư mục vừa lưu", "Tắt màn hình bằng cách che giấy"], "answer": 0, "explain": "Sau khi lưu tệp xong, ta thoát khỏi phần mềm trình chiếu."}, {"type": "mcq", "level": "VD", "q": "Nếu bạn Minh vô tình bấm nhầm nút Cancel trong cửa sổ Save As khi đang lưu bài trình chiếu, chuyện gì xảy ra?", "options": ["Tệp chưa được lưu với tên và vị trí mới đó, Minh cần thực hiện lại lệnh Save", "Tệp đã lưu thành công rồi", "Máy tính tự động tắt", "Mất toàn bộ dữ liệu trên ổ đĩa"], "answer": 0, "explain": "Bấm Cancel huỷ thao tác lưu ở hộp thoại hiện tại, nên cần mở lại Save/Save As để lưu tệp."}, {"type": "mcq", "level": "VD", "q": "Trong bài giới thiệu cảnh đẹp quê hương (Hình 26 trang 32), trang 3 có ảnh Cầu Trường Tiền. Em cần thêm gì để người xem biết đây là địa danh nào?", "options": ["Thêm dòng chú thích 'Cầu Trường Tiền' ngay dưới hoặc cạnh hình ảnh", "Chỉ để bức ảnh không có chữ chú thích", "Xoá hình ảnh đi", "Đổi màu nền thành đen"], "answer": 0, "explain": "Ghi chú thích rõ ràng cho hình ảnh giúp người xem nắm được thông tin minh hoạ."}, {"type": "mcq", "level": "VD", "q": "Nếu trên máy tính thực hành đang bật chế độ gõ tiếng Anh (E) trong Unikey, khi gõ 'huwowng' sẽ ra kết quả gì?", "options": ["Sẽ ra 'huwowng' (chưa biến thành 'ương') vì chưa bật chế độ gõ tiếng Việt (V)", "Sẽ tự động thành 'ương'", "Sẽ tự động tắt máy", "Sẽ lưu tệp vào thư mục"], "answer": 0, "explain": "Khi chưa bật chế độ gõ tiếng Việt (V), các phím 'w' không tự động biến đổi nguyên âm thành 'ư/ơ'."}, {"type": "mcq", "level": "VD", "q": "Khi đặt tên tệp trình chiếu trong phần thực hành (như 'Canh dep que huong' hoặc 'Truong em'), nên đặt thế nào?", "options": ["Ngắn gọn, gợi nhớ đúng nội dung bài trình chiếu và lưu đúng thư mục", "Đặt tên lung tung không liên quan", "Đặt tên dài hàng trăm kí tự vô nghĩa", "Không đặt tên"], "answer": 0, "explain": "Tên tệp rõ nghĩa, gắn với nội dung giúp dễ nhận biết và tìm lại sau này."}, {"type": "tf", "level": "VD", "q": "Đánh giá Đúng hoặc Sai trong các tình huống thực hành tạo bài trình chiếu:", "items": [{"text": "a) Gõ tiếng Việt có dấu thanh và chữ hoa giúp trang chiếu 'Cảnh đẹp quê hương' rõ nghĩa hơn.", "ans": true}, {"text": "b) Trong trang 3 minh hoạ cảnh đẹp, hình ảnh nên kèm chú thích rõ ràng.", "ans": true}, {"text": "c) Khi lưu tệp xong, em nên lưu vào thư mục của mình để dễ tìm lại ở các buổi sau.", "ans": true}, {"text": "d) Kiểu gõ VNI sử dụng phím 's, f, r, x, j' để gõ dấu sắc, huyền, hỏi, ngã, nặng.", "ans": false}], "explain": "Ý a, b, c đúng. Ý d sai vì 's, f, r, x, j' là dấu thanh của kiểu TELEX, còn VNI dùng số '1, 2, 3, 4, 5'."}, {"type": "match", "level": "VD", "q": "Nối yêu cầu thực hành ở cột A với bước làm đúng ở cột B:", "left": ["1. Gõ chữ tiếng Việt có dấu", "2. Gõ chữ hoa", "3. Lưu tệp vào thư mục của em", "4. Kết thúc buổi thực hành"], "right": ["a) Dùng phần mềm gõ tiếng Việt kiểu Telex hoặc VNI", "b) Nhấn giữ phím Shift và gõ phím chữ", "c) Mở Save As, chọn thư mục của em, đặt tên và nhấn Save", "d) Thoát khỏi phần mềm trình chiếu"], "pairs": [0, 1, 2, 3], "explain": "Các bước phối hợp gõ tiếng Việt, trình bày trang chiếu và lưu tệp đúng quy trình Bài 7."}, {"type": "fill", "level": "VD", "q": "Điền từ thích hợp (tiêu đề, địa danh, chú thích, lời mời) vào chỗ trống:", "text": "Khi làm bài trình chiếu giới thiệu quê hương, Trang 1 có {0}, họ tên, lớp; Trang 2 nêu các {1}; Trang 3 có ảnh kèm {2}; Trang 4 là {3} đến thăm.", "blanks": ["tiêu đề", "địa danh", "chú thích", "lời mời"], "wordBank": ["tiêu đề", "địa danh", "chú thích", "lời mời", "số trang"], "explain": "Cấu trúc 4 trang chiếu gợi ý ở SGK Tin học 4 trang 32."}, {"type": "fill", "level": "VD", "q": "Điền từ thích hợp (Save As, thư mục, tên tệp, Save) vào chỗ trống:", "text": "Để lưu bài trình chiếu vào thư mục cá nhân, em mở {0}, chọn đúng {1} của mình, gõ {2} rồi nhấn nút {3}.", "blanks": ["Save As", "thư mục", "tên tệp", "Save"], "wordBank": ["Save As", "thư mục", "tên tệp", "Save", "Undo"], "explain": "Thao tác lưu tệp chuẩn theo Hình 27 SGK Tin học 4 trang 33."}];
+
+const progressState = {
+  read1: false,
+  read2: false,
+  lab1: 0,
+  lab2: 0,
+  memo: false,
+  stars: [false,false,false,false,false],
+  quizDone: false,
+  quizRatio: 0
+};
+
+function updateDashboard(){
+  const readPct = (progressState.read1 ? 5 : 0) + (progressState.read2 ? 5 : 0);
+  const lab1Pct = Math.round(progressState.lab1 * 15);
+  const lab2Pct = Math.round(progressState.lab2 * 10);
+  const memoPct = progressState.memo ? 10 : 0;
+  const starCnt = progressState.stars.filter(Boolean).length;
+  const starPct = starCnt * 5;
+  const quizPct = progressState.quizDone ? 30 : 0;
+
+  const totalPct = Math.min(100, readPct + lab1Pct + lab2Pct + memoPct + starPct + quizPct);
+  const interRaw70 = readPct + lab1Pct + lab2Pct + memoPct + starPct;
+  const interScore5 = Number(((interRaw70 / 70) * 5).toFixed(2));
+  const quizScore5 = Number((progressState.quizRatio * 5).toFixed(2));
+  const totalScore10 = Number((interScore5 + quizScore5).toFixed(2));
+
+  document.getElementById('ui-pct').textContent = `Tiến độ bài học: ${totalPct}%`;
+  document.getElementById('ui-inter-score').textContent = `Điểm tương tác: ${interScore5.toFixed(1)} / 5.0`;
+  document.getElementById('ui-quiz-score').textContent = `Điểm trắc nghiệm: ${quizScore5.toFixed(1)} / 5.0`;
+  document.getElementById('ui-total-score').textContent = `🏆 Tổng điểm: ${totalScore10.toFixed(1)} / 10`;
+  document.getElementById('ui-progress-fill').style.width = totalPct + '%';
+
+  const setChk = (id, done, text) => {
+    const el = document.getElementById(id);
+    el.textContent = (done ? '✅ ' : '⬜ ') + text;
+    el.classList.toggle('done-item', done);
+  };
+  setChk('chk-read', readPct===10, `Đọc & Khám phá (${readPct}/10%)`);
+  setChk('chk-lab1', lab1Pct===15, `Thực hành nhiệm vụ 1 (${lab1Pct}/15%)`);
+  setChk('chk-lab2', lab2Pct===10, `Thực hành nhiệm vụ 2 (${lab2Pct}/10%)`);
+  setChk('chk-memo', memoPct===10, `Xác nhận Ghi nhớ (${memoPct}/10%)`);
+  setChk('chk-stars', starCnt===5, `Ngôi sao may mắn: ${starCnt}/5 (${starPct}/25%)`);
+  setChk('chk-quiz', progressState.quizDone, `Nộp bài trắc nghiệm 10 câu (${quizPct}/30%)`);
+
+  return {totalPct, interScore5, quizScore5, totalScore10};
+}
+
+function switchTab(idx){
+  for(let i=0;i<4;i++){
+    document.getElementById('stage-'+i).classList.toggle('hidden', i!==idx);
+    document.getElementById('tab-'+i).classList.toggle('active', i===idx);
+  }
+}
+
+function markStepDone(btn, key, doneLabel){
+  progressState[key] = true;
+  updateDashboard();
+  if(btn) btn.textContent = '✅ ' + doneLabel;
+}
+
+function handleMemoDone(btn){
+  progressState.memo = true;
+  updateDashboard();
+  if(btn) btn.textContent = '✅ Đã xác nhận Ghi nhớ (+10%)';
+}
+
+
+function checkB7Lab1(){
+  const a = document.getElementById('b7-t1').value;
+  const b = document.getElementById('b7-t2').value;
+  const c = document.getElementById('b7-t3').value;
+  const d = document.getElementById('b7-t4').value;
+  let ok = 0;
+  if(a==='que_huong') ok++;
+  if(b==='khiem_ton') ok++;
+  if(c==='uong_nuoc') ok++;
+  if(d==='que_huong') ok++;
+  const ratio = ok/4;
+  if(ratio > progressState.lab1) progressState.lab1 = ratio;
+  updateDashboard();
+  const fb = document.getElementById('b7-fb1');
+  fb.classList.remove('hidden');
+  fb.style.background = ok===4 ? '#f0fdf4' : '#fffbeb';
+  fb.innerHTML = ok===4
+    ? '🎉 Chính xác 4/4! Em gõ đúng cả Telex và VNI theo SGK Tin học 4 (+15% tiến độ).'
+    : `🔎 Em làm đúng ${ok}/4 từ (+${Math.round(ratio*15)}%/15% tiến độ). Kiểm tra lại quy tắc ghép chữ ư, ơ, â, ê, đ và dấu thanh.`;
+}
+
+function checkB7Lab2(){
+  const s1 = document.getElementById('b7-s1').value;
+  const s2 = document.getElementById('b7-s2').value;
+  const s3 = document.getElementById('b7-s3').value;
+  const s4 = document.getElementById('b7-s4').value;
+  let ok = 0;
+  if(s1==='s1') ok++;
+  if(s2==='s2') ok++;
+  if(s3==='s3') ok++;
+  if(s4==='s4') ok++;
+  const ratio = ok/4;
+  if(ratio > progressState.lab2) progressState.lab2 = ratio;
+  updateDashboard();
+  const fb = document.getElementById('b7-fb2');
+  fb.classList.remove('hidden');
+  fb.style.background = ok===4 ? '#f0fdf4' : '#fffbeb';
+  fb.innerHTML = ok===4
+    ? '🎉 Tuyệt vời! Em sắp xếp đúng cả 4 trang chiếu theo gợi ý SGK trang 32 (+10% tiến độ).'
+    : `🔎 Em sắp xếp đúng ${ok}/4 trang (+${Math.round(ratio*10)}%/10% tiến độ). Gợi ý: Trang 1 tiêu đề/họ tên/lớp → Trang 2 địa danh → Trang 3 ảnh & chú thích → Trang 4 lời mời.`;
+}
+
+
+let totalCandies = 0;
+function openStar(idx){
+  const item = STAR_QUESTIONS[idx];
+  const st = document.getElementById('star-stage');
+  st.classList.remove('hidden');
+  st.innerHTML = `
+    <h3 style="margin-top:0;color:#b45309">⭐ ${esc(item.q)}</h3>
+    <div>
+      ${item.opts.map((o,i)=>`
+        <label class="option" style="background:#fff">
+          <input type="radio" name="star-radio" value="${i}"> ${'ABC'[i]}. ${esc(o)}
+        </label>
+      `).join('')}
+    </div>
+    <button class="btn btn-amber" style="margin-top:10px" onclick="checkStar(${idx})">🎁 Kiểm tra nhận kẹo & +5% tiến độ</button>
+    <div id="star-feedback" style="margin-top:10px;font-weight:700"></div>
+  `;
+}
+
+function checkStar(idx){
+  const sel = document.querySelector('input[name="star-radio"]:checked');
+  const fb = document.getElementById('star-feedback');
+  if(!sel){
+    fb.innerHTML = '<span style="color:#d97706">⚠️ Em hãy chọn một đáp án trước nhé!</span>';
+    return;
+  }
+  const item = STAR_QUESTIONS[idx];
+  if(Number(sel.value) === item.ans){
+    if(!progressState.stars[idx]){
+      progressState.stars[idx] = true;
+      totalCandies += item.candy;
+      document.getElementById('candy-count').textContent = totalCandies;
+      document.getElementById('star-done-count').textContent = progressState.stars.filter(Boolean).length;
+      document.getElementById('star-'+idx).classList.add('done');
+      updateDashboard();
+    }
+    fb.innerHTML = `<span style="color:#15803d">🎉 Chính xác! Em nhận được ${item.candy} viên kẹo và +5% tiến độ tương tác!</span>`;
+  } else {
+    fb.innerHTML = `<span style="color:#dc2626">❌ Chưa đúng rồi, em thử chọn lại đáp án khác nhé!</span>`;
+  }
+}
+
+const shuffle = arr => {
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+};
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LEVEL_LABEL = {NB:'Nhận biết',TH:'Thông hiểu',VD:'Vận dụng'};
+const LEVEL_CLASS = {NB:'b-nb',TH:'b-th',VD:'b-vd'};
+const TYPE_LABEL  = {mcq:'Trắc nghiệm',tf:'Đúng / Sai',match:'Nối cột',fill:'Điền từ'};
+
+let chosenQuiz = [], quizRemain = 480, quizTimer = null, quizSubmitted = false;
+
+function startQuiz(){
+  const name = document.getElementById('stu-name').value.trim();
+  const cls  = document.getElementById('stu-class').value.trim();
+  if(!name || !cls){
+    alert('Em vui lòng nhập đầy đủ Họ và tên và Lớp ở phía trên trước khi làm bài trắc nghiệm nhé!');
+    document.getElementById('stu-name').focus();
+    return;
+  }
+
+  const picked = [
+    ...shuffle(BANK_40.filter(q=>q.level==='NB')).slice(0,4),
+    ...shuffle(BANK_40.filter(q=>q.level==='TH')).slice(0,3),
+    ...shuffle(BANK_40.filter(q=>q.level==='VD')).slice(0,3)
+  ];
+
+  chosenQuiz = shuffle(picked).map(q=>{
+    if(q.type==='mcq'){
+      const ops = shuffle(q.options.map((t,i)=>({t,correct:i===q.answer})));
+      return {...q,ops};
+    }
+    if(q.type==='match'){
+      const rightShuffled = shuffle(q.right.map((t,idx)=>({t,origIdx:idx})));
+      return {...q,rightShuffled};
+    }
+    if(q.type==='fill'){
+      return {...q,wordBankShuffled:shuffle(q.wordBank)};
+    }
+    return {...q};
+  });
+
+  quizSubmitted = false;
+  quizRemain = 480;
+  document.getElementById('stu-name').disabled = true;
+  document.getElementById('stu-class').disabled = true;
+  document.getElementById('btn-start-quiz').disabled = true;
+  document.getElementById('quiz-work').classList.remove('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+
+  const qWrap = document.getElementById('quiz-questions');
+  qWrap.innerHTML = '';
+
+  chosenQuiz.forEach((q,i)=>{
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = 'qcard-'+i;
+
+    const head = `<div><b>Câu ${i+1}. ${esc(q.q)}</b> <span class="badge ${LEVEL_CLASS[q.level]}">${LEVEL_LABEL[q.level]}</span> <span class="badge b-type">${TYPE_LABEL[q.type]}</span></div>`;
+    let body = '';
+
+    if(q.type==='mcq'){
+      body = q.ops.map((o,j)=>`
+        <label class="option" id="qopt-${i}-${j}">
+          <input type="radio" name="qq${i}" value="${j}"> ${'ABCD'[j]}. ${esc(o.t)}
+        </label>
+      `).join('');
+    } else if(q.type==='tf'){
+      body = q.items.map((it,j)=>`
+        <div class="tf-row" id="qtf-${i}-${j}">
+          <span>${esc(it.text)}</span>
+          <span class="tf-choices">
+            <label><input type="radio" name="qq${i}_${j}" value="true"> Đúng</label>
+            <label><input type="radio" name="qq${i}_${j}" value="false"> Sai</label>
+          </span>
+        </div>
+      `).join('');
+    } else if(q.type==='match'){
+      const optsHtml = '<option value="">-- Chọn ý nối --</option>' + q.rightShuffled.map(r=>`<option value="${r.origIdx}">${esc(r.t)}</option>`).join('');
+      body = q.left.map((lText,j)=>`
+        <div class="match-row" id="qmatch-${i}-${j}">
+          <div><b>${esc(lText)}</b></div>
+          <div><select id="qsel-${i}-${j}">${optsHtml}</select></div>
+        </div>
+      `).join('');
+    } else if(q.type==='fill'){
+      const optsHtml = '<option value="">-- Chọn từ --</option>' + q.wordBankShuffled.map(w=>`<option value="${esc(w)}">${esc(w)}</option>`).join('');
+      let txt = esc(q.text);
+      q.blanks.forEach((_,bIdx)=>{
+        txt = txt.replace('{' + bIdx + '}', `<select id="qfill-${i}-${bIdx}">${optsHtml}</select>`);
+      });
+      body = `<div class="word-bank">💡 <b>Từ gợi ý:</b> ${q.wordBankShuffled.map(w=>esc(w)).join(' &nbsp;•&nbsp; ')}</div><div class="fill-box">${txt}</div>`;
+    }
+
+    card.innerHTML = head + body + `<div class="explain-box hidden" id="qexp-${i}"></div>`;
+    qWrap.appendChild(card);
+  });
+
+  clearInterval(quizTimer);
+  quizTimer = setInterval(()=>{
+    quizRemain--;
+    const mm = String(Math.floor(quizRemain/60)).padStart(2,'0');
+    const ss = String(quizRemain%60).padStart(2,'0');
+    document.getElementById('quiz-timer').textContent = `⏱️ ${mm}:${ss}`;
+    if(quizRemain <= 0) submitQuiz();
+  },1000);
+}
+
+async function submitQuiz(){
+  if(quizSubmitted) return;
+  quizSubmitted = true;
+  clearInterval(quizTimer);
+  document.getElementById('btn-submit-quiz').disabled = true;
+  document.querySelectorAll('#quiz-questions input, #quiz-questions select').forEach(el=>el.disabled=true);
+
+  const totalQ = chosenQuiz.length;
+  let totalRaw = 0;
+  let fullRight = 0;
+  let reviewHtml = '<hr style="border:0;border-top:1px solid #cbd5e1;margin:16px 0"><h3>📋 Bảng tổng hợp đáp án & Giảng giải chi tiết</h3>';
+
+  chosenQuiz.forEach((q,i)=>{
+    let ratio = 0;
+    let userAns = '';
+    let rightAns = '';
+
+    if(q.type==='mcq'){
+      const sel = document.querySelector(`input[name="qq${i}"]:checked`);
+      const cIdx = sel ? Number(sel.value) : -1;
+      const rIdx = q.ops.findIndex(o=>o.correct);
+      ratio = (cIdx === rIdx) ? 1 : 0;
+
+      const rLab = document.getElementById(`qopt-${i}-${rIdx}`);
+      if(rLab) rLab.classList.add('opt-correct');
+      if(ratio===0 && cIdx!==-1){
+        const wLab = document.getElementById(`qopt-${i}-${cIdx}`);
+        if(wLab) wLab.classList.add('opt-wrong');
+      }
+      rightAns = `${'ABCD'[rIdx]}. ${esc(q.ops[rIdx].t)}`;
+      userAns  = cIdx===-1 ? '<i>Chưa chọn</i>' : `${'ABCD'[cIdx]}. ${esc(q.ops[cIdx].t)}`;
+    } else if(q.type==='tf'){
+      let sub = 0, uArr = [], rArr = [];
+      q.items.forEach((it,j)=>{
+        const sel = document.querySelector(`input[name="qq${i}_${j}"]:checked`);
+        const val = sel ? sel.value : null;
+        const row = document.getElementById(`qtf-${i}-${j}`);
+        if(val === String(it.ans)){
+          sub++; row.classList.add('opt-correct');
+        } else {
+          row.classList.add('opt-wrong');
+        }
+        const tag = it.text.slice(0,2);
+        uArr.push(`${tag} ${val===null?'(trống)':(val==='true'?'Đúng':'Sai')}`);
+        rArr.push(`${tag} <b>${it.ans?'Đúng':'Sai'}</b>`);
+      });
+      ratio = sub / q.items.length;
+      userAns = uArr.join('; ');
+      rightAns = rArr.join('; ');
+    } else if(q.type==='match'){
+      let sub = 0, uArr = [], rArr = [];
+      q.left.forEach((lTxt,j)=>{
+        const sel = document.getElementById(`qsel-${i}-${j}`);
+        const val = sel.value;
+        const row = document.getElementById(`qmatch-${i}-${j}`);
+        if(val === String(q.pairs[j])){
+          sub++; row.classList.add('opt-correct');
+        } else {
+          row.classList.add('opt-wrong');
+        }
+        const chosenTxt = val==='' ? '(trống)' : q.right[Number(val)];
+        uArr.push(`${esc(lTxt)} → ${esc(chosenTxt)}`);
+        rArr.push(`${esc(lTxt)} → <b>${esc(q.right[q.pairs[j]])}</b>`);
+      });
+      ratio = sub / q.left.length;
+      userAns = uArr.join(' | ');
+      rightAns = rArr.join(' | ');
+    } else if(q.type==='fill'){
+      let sub = 0, uArr = [], rArr = [];
+      q.blanks.forEach((wAns,bIdx)=>{
+        const sel = document.getElementById(`qfill-${i}-${bIdx}`);
+        const val = sel.value;
+        if(val === wAns){
+          sub++; sel.style.background='#dcfce7'; sel.style.borderColor='#16a34a';
+        } else {
+          sel.style.background='#fee2e2'; sel.style.borderColor='#dc2626';
+        }
+        uArr.push(`(${bIdx+1}) ${val===''?'trống':esc(val)}`);
+        rArr.push(`(${bIdx+1}) <b>${esc(wAns)}</b>`);
+      });
+      ratio = sub / q.blanks.length;
+      userAns = uArr.join(', ');
+      rightAns = rArr.join(', ');
+    }
+
+    totalRaw += ratio;
+    const isOk = (ratio === 1);
+    if(isOk) fullRight++;
+
+    const card = document.getElementById(`qcard-${i}`);
+    card.classList.add(isOk ? 'q-correct' : 'q-wrong');
+
+    const exp = document.getElementById(`qexp-${i}`);
+    exp.classList.remove('hidden');
+    exp.classList.add(isOk ? 'ok' : 'bad');
+    exp.innerHTML = (isOk
+      ? `✅ <b>Chính xác hoàn toàn!</b> Đáp án đúng: ${rightAns}`
+      : `❌ <b>Chưa chính xác (${Math.round(ratio*100)}%).</b> Em chọn: ${userAns}<br>👉 <b>Đáp án đúng:</b> ${rightAns}`)
+      + `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.15)">💡 <b>Giảng giải:</b> ${esc(q.explain)}</div>`;
+
+    reviewHtml += `
+      <div class="review-item ${isOk?'ok':'bad'}">
+        <div><b>Câu ${i+1} (${LEVEL_LABEL[q.level]} – ${TYPE_LABEL[q.type]}):</b> ${esc(q.q)}</div>
+        <div style="margin-top:4px">${isOk ? '✅ Em làm đúng: '+rightAns : '❌ Em làm: '+userAns+'<br>👉 Đáp án đúng: '+rightAns}</div>
+        <div style="margin-top:4px;color:#334155">💡 <i>Giảng giải: ${esc(q.explain)}</i></div>
+      </div>
+    `;
+  });
+
+  progressState.quizDone = true;
+  progressState.quizRatio = totalRaw / totalQ;
+  const summary = updateDashboard();
+
+  const quizScore10 = Number((progressState.quizRatio * 10).toFixed(2));
+  let rankText = 'Chưa hoàn thành (CHT)';
+  let rankClass = 'rank-cht';
+  if(summary.totalScore10 >= 8){
+    rankText = 'Hoàn thành tốt (HTT)';
+    rankClass = 'rank-htt';
+  } else if(summary.totalScore10 >= 5){
+    rankText = 'Hoàn thành (HT)';
+    rankClass = 'rank-ht';
+  }
+
+  const resBox = document.getElementById('quiz-result');
+  resBox.classList.remove('hidden');
+  resBox.innerHTML = `
+    <div style="background:#f8fafc;border:2px solid #bfdbfe;border-radius:14px;padding:18px">
+      <h2 style="margin:0 0 10px">🏆 Bảng tổng kết đánh giá toàn bài học của em</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:12px">
+        <div style="background:#eff6ff;padding:10px 12px;border-radius:10px;border:1px solid #bfdbfe">
+          <div style="font-size:13px;color:#1e40af;font-weight:700">Tiến độ tương tác toàn bài</div>
+          <div style="font-size:20px;font-weight:800;color:#1d4ed8">${summary.totalPct}%</div>
+        </div>
+        <div style="background:#fffbeb;padding:10px 12px;border-radius:10px;border:1px solid #fde68a">
+          <div style="font-size:13px;color:#92400e;font-weight:700">Điểm tương tác (Chặng 1–3)</div>
+          <div style="font-size:20px;font-weight:800;color:#b45309">${summary.interScore5.toFixed(2)} / 5.0</div>
+        </div>
+        <div style="background:#faf5ff;padding:10px 12px;border-radius:10px;border:1px solid #e9d5ff">
+          <div style="font-size:13px;color:#6b21a8;font-weight:700">Điểm trắc nghiệm (${fullRight}/${totalQ} câu)</div>
+          <div style="font-size:20px;font-weight:800;color:#7e22ce">${summary.quizScore5.toFixed(2)} / 5.0 <small style="font-size:13px">(${quizScore10}/10)</small></div>
+        </div>
+        <div style="background:#f0fdf4;padding:10px 12px;border-radius:10px;border:1px solid #bbf7d0">
+          <div style="font-size:13px;color:#166534;font-weight:700">TỔNG ĐIỂM TOÀN BÀI</div>
+          <div style="font-size:22px;font-weight:800;color:#15803d">${summary.totalScore10.toFixed(2)} / 10</div>
+        </div>
+      </div>
+      <p style="margin:6px 0">Mức đánh giá chung: <span class="rank-pill ${rankClass}">${rankText}</span></p>
+      <p id="send-status" style="margin:8px 0 12px;color:#0f766e;font-weight:700">⏳ Đang gửi điểm tương tác, điểm trắc nghiệm và % hoàn thành về Google Sheets của giáo viên...</p>
+      <button class="btn btn-outline btn-sm" onclick="resetQuiz()">🔄 Làm lượt trắc nghiệm mới (giữ nguyên % tương tác bài giảng)</button>
+    </div>
+    ${reviewHtml}
+  `;
+  resBox.scrollIntoView({behavior:'smooth'});
+
+  const payload = {
+    hoTen: document.getElementById('stu-name').value.trim(),
+    lop: document.getElementById('stu-class').value.trim(),
+    tracNghiem: summary.quizScore5,
+    tuLuan: summary.interScore5,
+    tongDiem: summary.totalScore10,
+    tienDoTuongTac: summary.totalPct + '%',
+    baiKiemTra: `Tin học 4 KNTT - Bài 7 (Tương tác ${summary.totalPct}%: ${summary.interScore5}đ + Trắc nghiệm: ${summary.quizScore5}đ)`,
+    monHoc: 'Tin học 4',
+    soCauDung: fullRight
+  };
+
+  try{
+    await fetch(ENDPOINT,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)
+    });
+    document.getElementById('send-status').textContent = '✅ Đã gửi đầy đủ điểm tương tác, điểm trắc nghiệm và % tiến độ về Google Sheets của giáo viên!';
+  } catch(e){
+    document.getElementById('send-status').textContent = '⚠️ Không gửi được điểm qua mạng. Em hãy kiểm tra Internet và báo giáo viên nhé.';
+  }
+}
+
+function resetQuiz(){
+  document.getElementById('stu-name').disabled = false;
+  document.getElementById('stu-class').disabled = false;
+  document.getElementById('btn-start-quiz').disabled = false;
+  document.getElementById('btn-submit-quiz').disabled = false;
+  document.getElementById('quiz-work').classList.add('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+}
+
+updateDashboard();
+</script>
+</body>
+</html>
